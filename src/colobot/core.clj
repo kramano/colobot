@@ -39,35 +39,41 @@
 (defn fighting-with-boss? [hero]
   (:arena_fight hero))
 
+(defn ressurect [hero]
+  (sequence "Ressurect"
+            (action "Is dead?"
+                    (dead? hero))
+            (action "Ressurect hero"
+                    true)))
 
-(defn tree [hero]
-  (selector "Root"
-   (sequence "Ressurect if dead"
-             (action "Is hero dead?"
-                     (dead? hero))
-             (action "Ressurect hero"
-                     (println "Rssurect")))
-   (sequence "Hero is in town"
-             (action "Is hero in town?"
-                     (in-town? hero))
-             (action "Maybe has gold for brick?"
-                     (maybe-enough-gold? hero))
-             (action "Check actual gold"
-                     (println "Check gold"))
-             (action "Try to make a brick behavior"
-                     (println "Try to make a brick behavior")))
-   (sequence "Hero is fighting with boss"
-             (action "Is hero fighting?"
-                     (fighting-with-boss? hero))
-             (action "Fighting behavior"
-                     (println "Fighting behavior")))
-   (selector "Messing around"
-             (sequence "Hero is fighting"
-                       (action "Check if fighting"
-                               (println "Check if fighting")))
-             (sequence "Ok"
-                       (action "Try to dig a treasure"
-                               (println "Try to dig a treasure"))))))
+(defn charge-prana [hero]
+  (selector "Charge prana"
+            (inverter
+             (action "Low prana?"
+                     (low-godpower? hero)))
+            (action "Charge"
+                    true)))
+
+(defn make-brick [hero]
+  (sequence "Make brick"
+            (action "Maybe enough gold?"
+                    (maybe-enough-gold? hero))
+            (action "Enough gold?"
+                    true)
+            (until-success
+             (sequence
+              (charge-prana hero)
+              (action "Make bad"
+                      true)
+              (action "Made brick?"
+                      true)))))
+
+
+
+(defn behave [hero]
+  (selector "Hero"
+   (ressurect hero)
+   (make-brick hero)))
 
 (defn -main
   "I don't do a whole lot ... yet."
