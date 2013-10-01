@@ -5,33 +5,39 @@
 
 (def digging_phrase "Копай! Клад! Золото!")
 
-(def log-file "/Users/rindon/clj/clodville/clodville.log")
+(def log-file "/home/mnovik/clj/colobot/colobot.log")
 
 (defn configure-logger []
   (do
     (timbre/set-level! :info)
     (timbre/set-config! [:appenders :spit :enabled?] true)
     (timbre/set-config! [:shared-appender-config :spit-filename] log-file)
-    (timbre/set-config! [:ns-whitelist] ["clodville.*"])))
+    (timbre/set-config! [:ns-whitelist] ["colobot.*"])))
 
 
 (defn start-godville []
   (do
     (configure-logger)
     (info "Starting Godville...")
-    (System/setProperty "webdriver.chrome.driver", "/Users/rindon/clj/chromedriver")
+    (System/setProperty "webdriver.chrome.driver",
+                        "/home/mnovik/clj/colobot/chromedriver")
     (set-driver! {:browser :chrome} "http://godville.net/")))
 
 (defn login [email password]
   (info (str "Logging in with " email " " password))
-  (quick-fill-submit {"#username" email}
-                     {"#password" password}
-                     {"#password" submit}))
+  (do
+    (quick-fill-submit {"#username" email}
+                       {"#password" password}
+                       {"#password" submit})
+    (wait-until #(exists? "div#hk_distance"))))
 
 (defn say [phrase]
   (info (str "Saying: " phrase))
-  (quick-fill-submit {"#god_phrase" phrase}
-                     {"#god_phrase" submit}))
+  (do
+    (quick-fill-submit {"#god_phrase" phrase}
+                       {"#god_phrase" submit})
+    true))
+
 (defn fighting? []
   (let [monster (text (find-element-under "div#news" {:class "l_val"}))]
     (not (clojure.string/blank? monster))))
@@ -45,16 +51,23 @@
 
 (defn make-bad []
   (let [make-bad-lnk (element {:text "Сделать плохо"})]
-    (click-lnk make-bad-lnk)))
+    (click-lnk make-bad-lnk)
+    true))
 
 (defn make-good []
   (let [make-good-lnk (element {:text "Сделать хорошо"})]
-    (click make-good-lnk)))
+    (click make-good-lnk)
+    true))
 
 (defn charge-prana []
   (let [charge-prana-lnk (element {:text "Восстановить"})]
-    (click charge-prana-lnk)))
+    (click charge-prana-lnk)
+    true))
 
+(defn ressurect []
+  (let [ressurect-lnk (element {:text "Воскресить"})]
+    (click ressurect-lnk)
+    true))
 
 (defn in-city? []
   (= (text (find-element-under "div#hk_distance" {:class "l_capt"})) "Город"))
@@ -80,7 +93,6 @@
         total (parse-int (nth splitted 2))]
     (quot (* 100 current) total)))
 
-
 (defn alive? [] (not= life-percent 0))
 
 (defn ressurect []
@@ -96,6 +108,9 @@
         (Thread/sleep 1000))
     (do (warn "No fucking prana!!")
         (exit))))
+
+(defn low-prana? []
+  (<= (prana-percent) 25))
 
 (defn check-and-charge-prana []
   (info "Checking prana...")

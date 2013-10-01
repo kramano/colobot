@@ -1,12 +1,13 @@
 (ns colobot.core
   (:gen-class)
   (:require [clj-http.client :as client]
-            [alter-ego.core :refer :all]))
-
-(defn create-colobot []
-  ({}))
+            [alter-ego.core :refer :all]
+            [colobot.browser :as ui]))
 
 (def godville-api-url "http://godville.net/gods/api/")
+
+(def phrases {:digging "Копай! Клад! Золото!"
+              :battle "Бей! Ударь! Стукни!"})
 
 (defn make-url [god-name]
   (str godville-api-url god-name ".json"))
@@ -44,15 +45,15 @@
             (action "Is dead?"
                     (dead? hero))
             (action "Ressurect hero"
-                    true)))
+                    ui/ressurect)))
 
-(defn charge-prana [hero]
+(defn charge-prana []
   (selector "Charge prana"
             (inverter
              (action "Low prana?"
-                     (low-godpower? hero)))
+                     (ui/low-prana?)))
             (action "Charge"
-                    true)))
+                    ui/charge-prana)))
 
 (defn make-brick [hero]
   (sequence "Make brick"
@@ -61,7 +62,7 @@
             (action "Enough gold?"
                     true)
             (until-success
-             (sequence
+             (sequence "Make bad"
               (charge-prana hero)
               (action "Make bad"
                       true)
@@ -75,20 +76,54 @@
             (until-success
              (sequence "Fight"
                        (charge-prana hero)
-                       (action "Something here" true)
+                       (action "Check health" true)
                        (action "Boss dead?" true)))))
 
+(defn low-health? [hero treshold-ratio]
+  (let [{:keys [health max_health]} hero]
+    (<= (/ health max_health) treshold-ratio)))
 
+(defn messing-around [hero]
+  (selector "Where is hero?"
+            (action "In town?"
+                    (in-town? hero))
+            (sequence "Fighting"
+                      (charge-prana)
+                      (action "Fighting?"
+                              ui/fighting?)
+                      (action "Say battle phrase"
+                              ui/say (:battle phrases)))
+            (sequence "Walking"
+                      (charge-prana)
+                      (action "Say dig phrase"
+                              ui/say (:digging phrases)))))
 
 (defn behave [hero]
   (selector "Hero"
             (ressurect hero)
-            (fight-with-boss hero)
-            (make-brick hero)))
+;            (make-brick hero)
+            (messing-around hero)))
+
+(defn loop-forever [f]
+  (doall (repeatedly f)))
+
+(defn run [f period]
+  (loop-forever
+   (fn [] (do
+           (try (f)
+                (catch Exception e (println e))
+                (finally (Thread/sleep period)))))))
+
+(defn main-loop []
+  (let [hero (get-hero-state "Баст и Он")]
+    behave hero))
 
 (defn -main
-  "I don't do a whole lot ... yet."
   [& args]
   ;; work around dangerous default behaviour in Clojure
   (alter-var-root #'*read-eval* (constantly false))
-  (println "Hello, World!"))
+  (do
+    (println "Hi")
+    (ui/start-godville)
+    (ui/login "max.rindon@gmail.com" "duenda")
+    (run main-loop 60000)))
