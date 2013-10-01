@@ -148,6 +148,6 @@
 (defn main []
   (do
     (start-godville)
-    (login "max.rindon@yandex.ru" "duenda")
+    (login "***" "***")
     (wait-until #(exists? "div#hk_distance"))
     (behave default-behavior 60000)))
