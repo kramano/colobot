@@ -65,15 +65,26 @@
               (charge-prana hero)
               (action "Make bad"
                       true)
-              (action "Made brick?"
+              (action "Done?"
                       true)))))
+
+(defn fight-with-boss [hero]
+  (sequence "Fight with boss"
+            (action "Is fighting with boss?"
+                    (fighting-with-boss? hero))
+            (until-success
+             (sequence "Fight"
+                       (charge-prana hero)
+                       (action "Something here" true)
+                       (action "Boss dead?" true)))))
 
 
 
 (defn behave [hero]
   (selector "Hero"
-   (ressurect hero)
-   (make-brick hero)))
+            (ressurect hero)
+            (fight-with-boss hero)
+            (make-brick hero)))
 
 (defn -main
   "I don't do a whole lot ... yet."
