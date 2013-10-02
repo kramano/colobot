@@ -19,6 +19,8 @@
         hero (:body resp)]
     hero))
 
+(defn log [s] (clojure.pprint/pprint s))
+
 (defn dead? [hero]
   (= 0 (:health hero)))
 
@@ -43,17 +45,21 @@
 (defn ressurect [hero]
   (sequence "Ressurect"
             (action "Is dead?"
+                    (log (str "Dead: " (dead? hero)))
                     (dead? hero))
             (action "Ressurect hero"
-                    ui/ressurect)))
+                    (log "Ressurection")
+                    (ui/ressurect))))
 
 (defn charge-prana []
   (selector "Charge prana"
             (inverter
              (action "Low prana?"
+                     (log (str "Low prana: " (ui/low-prana?)))
                      (ui/low-prana?)))
             (action "Charge"
-                    ui/charge-prana)))
+                    (log "Charging prana")
+                    (ui/charge-prana))))
 
 (defn make-brick [hero]
   (sequence "Make brick"
@@ -86,17 +92,19 @@
 (defn messing-around [hero]
   (selector "Where is hero?"
             (action "In town?"
+                    (log (str "In town: " (in-town? hero)))
                     (in-town? hero))
             (sequence "Fighting"
                       (charge-prana)
                       (action "Fighting?"
-                              ui/fighting?)
+                              (log (str "Fighting: " (ui/fighting?)))
+                              (ui/fighting?))
                       (action "Say battle phrase"
-                              ui/say (:battle phrases)))
+                              (ui/say (:battle phrases))))
             (sequence "Walking"
                       (charge-prana)
                       (action "Say dig phrase"
-                              ui/say (:digging phrases)))))
+                              (ui/say (:digging phrases))))))
 
 (defn behave [hero]
   (selector "Hero"
@@ -111,19 +119,18 @@
   (loop-forever
    (fn [] (do
            (try (f)
-                (catch Exception e (println e))
+                (catch Exception e (log (.getStackTrace e)))
                 (finally (Thread/sleep period)))))))
 
 (defn main-loop []
   (let [hero (get-hero-state "Баст и Он")]
-    behave hero))
+    (alter-ego.core/exec (behave hero))))
 
 (defn -main
   [& args]
   ;; work around dangerous default behaviour in Clojure
   (alter-var-root #'*read-eval* (constantly false))
   (do
-    (println "Hi")
     (ui/start-godville)
     (ui/login "max.rindon@gmail.com" "duenda")
     (run main-loop 60000)))

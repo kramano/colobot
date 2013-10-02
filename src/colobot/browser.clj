@@ -17,14 +17,11 @@
 
 (defn start-godville []
   (do
-    (configure-logger)
-    (info "Starting Godville...")
     (System/setProperty "webdriver.chrome.driver",
                         "/home/mnovik/clj/colobot/chromedriver")
     (set-driver! {:browser :chrome} "http://godville.net/")))
 
 (defn login [email password]
-  (info (str "Logging in with " email " " password))
   (do
     (quick-fill-submit {"#username" email}
                        {"#password" password}
@@ -32,7 +29,6 @@
     (wait-until #(exists? "div#hk_distance"))))
 
 (defn say [phrase]
-  (info (str "Saying: " phrase))
   (do
     (quick-fill-submit {"#god_phrase" phrase}
                        {"#god_phrase" submit})
@@ -106,8 +102,7 @@
   (if (> (acc-value) 0)
     (do (charge-prana)
         (Thread/sleep 1000))
-    (do (warn "No fucking prana!!")
-        (exit))))
+    (exit)))
 
 (defn low-prana? []
   (<= (prana-percent) 25))
@@ -157,7 +152,7 @@
   (loop-forever
    (fn [] (do
            (try (behavior)
-                (catch Exception e (warn e))
+                (catch Exception e (.printStacktrace e))
                 (finally (Thread/sleep period)))))))
 
 (defn main []
