@@ -18,8 +18,8 @@
 (defn start-godville []
   (do
     (System/setProperty "webdriver.chrome.driver",
-                        "/home/mnovik/clj/colobot/chromedriver")
-    (set-driver! {:browser :chrome} "http://godville.net/")))
+                        "/Users/rindon/clj/chromedriver")
+    (set-driver! {:browser :firefox} "http://godville.net/")))
 
 (defn login [email password]
   (do
