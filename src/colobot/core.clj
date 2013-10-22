@@ -2,7 +2,8 @@
   (:gen-class)
   (:require [clj-http.client :as client]
             [alter-ego.core :refer :all]
-            [colobot.browser :as ui]))
+            [colobot.browser :as ui]
+            [colobot.observer :as ob]))
 
 (def godville-api-url "http://godville.net/gods/api/")
 

@@ -11,7 +11,9 @@
             [clojure.java.io :as cjio]
             [clojure.string :as str]
             [clojure.java.classpath :as cjc]
-            [criterium.core :as crit]))
+            [criterium.core :as crit]
+            [taoensso.timbre :as timbre
+                      :refer (trace debug info warn error fatal spy with-log-level)]))
 
 
 
