@@ -13,6 +13,15 @@
              :src-host "46.4.69.52"
              :src-port 82
              :offset 78})
+
+(defn get-message-length [^PcapPacket packet]
+  (let [headers [(Tcp.) (Ip4.) (Ethernet.)]
+        header-sizes (map #(.. packet (getHeader %) (size)) headers)
+        full-size (.size packet)
+        without-headers (- full-size (reduce + header-sizes))]
+    {:packet-size full-size
+     :without-headers without-headers}))
+
 (def message-parts (atom []))
 
 (defn buffer-to-string [^JBuffer buffer offset]
@@ -21,15 +30,19 @@
 
 (defn log-message [message]
   (try (info (cheshire/parse-string message true))
-       (catch Exception ex (info (str "Unable to parse: " message)))))
+       (catch Exception ex (do (info (str "Unable to parse: " message))
+                               (info ex)))))
 
 (defn is-last-part? [^String message]
   (.endsWith message "\"success\"}"))
 
 (defn handle [packet]
   (let [p (:pcap-packet packet)
+        full-message (buffer-to-string p 66)
         message (buffer-to-string p (:offset config))]
-    (swap! message-parts conj message)
+    (if (empty? @message-parts)
+      (swap! message-parts conj message)
+      (swap! message-parts conj full-message))
     (when (is-last-part? message)
       (->> @message-parts
            (apply str)
