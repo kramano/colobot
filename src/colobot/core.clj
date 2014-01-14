@@ -133,5 +133,5 @@
   (alter-var-root #'*read-eval* (constantly false))
   (do
     (ui/start-godville)
-    (ui/login "max.rindon@gmail.com" "duenda")
+    (ui/login "***" "****")
     (run main-loop 60000)))
